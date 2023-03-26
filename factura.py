@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 from fake_useragent import UserAgent
 import keys
 from login_facturowo import input_login, get_saved_login_data, get_temp_login_data
-from tqdm import tqdm, tqdm_gui, tnrange
+from tqdm import tqdm, trange
 
 
 def get_factura():
@@ -89,104 +89,138 @@ def get_factura():
             err = True
 
     # delete temp login and password
-    os.remove(f"{os.getcwd()}\\temp_login.json")
+    try:
+        os.remove(f"{os.getcwd()}\\temp_login.json")
+    except Exception:
+        pass
 
-    # create new document
+    # add button for creating new document
     new_document_button = driver.find_element(By.XPATH, f"//a[@class='btn btn-xs btn-primary']")
     new_document_button.click()
 
     sleep(1.5)
 
     # getting input excel files
-    path = "D:\\python_projects\\factura\\xlsx"
+    path = f"{os.getcwd()}\\xlsx"
     files_list = os.listdir(path)
     print(f"\nВсего найдено файлов: {len(files_list)}.")
 
     for file in files_list:
-        print(f"Извлечен файл {file}.\n")
+        print(f"\nИзвлечен файл {file}.")
 
         # getting sheets in every excel file
         wb = load_workbook(filename=f"{path}\\{file}")
         print(f"Всего найдено листов: {len(wb.sheetnames)}.")
 
-        for sheet in wb.sheetnames:
+        for sheet_name in wb.sheetnames:
 
-            # filling fields about companies
-            supply_field = driver.find_element(By.NAME, "sprzedawca[nazwa]")
-            supply_field.send_keys(Keys.CONTROL, "a")
-            supply_field.send_keys(Keys.DELETE)
-            supply_field.send_keys("Supply_company")
+            # select active sheet
+            sheet_active = wb[sheet_name]
 
-            sleep(0.5)
+            # select data from sheet from excel file
+            document_type_sheet = str(sheet_active['B1'].value)
+            buyer_name_sheet = str(sheet_active['B2'].value)
+            buyer_nip_sheet = str(sheet_active['B3'].value)
+            buyer_address_sheet = str(sheet_active['B4'].value)
+            buyer_place_sheet = str(sheet_active['B5'].value)
+            tax_sheet = str(sheet_active['B6'].value)
+            currency_sheet = str(sheet_active['B7'].value)
+            measure_sheet = str(sheet_active['B8'].value)
 
-            supply_nip_field = driver.find_element(By.NAME, "sprzedawca[nip]")
-            supply_nip_field.send_keys(Keys.CONTROL, "a")
-            supply_nip_field.send_keys(Keys.DELETE)
-            supply_nip_field.send_keys("9856325783")
+            # filling field 'Dokument'
+            document_type_select = Select(driver.find_element(By.ID, 'rodzaj'))
+            document_type_select.select_by_visible_text(document_type_sheet)
 
-            sleep(0.5)
-
-            buyer_field = driver.find_element(By.NAME, "nabywca[nazwa]")
-            buyer_field.send_keys(Keys.CONTROL, "a")
-            buyer_field.send_keys(Keys.DELETE)
-            buyer_field.send_keys("Buyer_company")
+            # filling fields about buyer
+            buyer_name_field = driver.find_element(By.NAME, "nabywca[nazwa]")
+            buyer_name_field.send_keys(Keys.CONTROL, "a")
+            buyer_name_field.send_keys(Keys.DELETE)
+            buyer_name_field.send_keys(buyer_name_sheet)
 
             sleep(0.5)
 
             buyer_nip_field = driver.find_element(By.NAME, "nabywca[nip]")
             buyer_nip_field.send_keys(Keys.CONTROL, "a")
             buyer_nip_field.send_keys(Keys.DELETE)
-            buyer_nip_field.send_keys("9687653259")
+            buyer_nip_field.send_keys(buyer_nip_sheet)
 
             sleep(0.5)
 
-            # select active sheet
-            sheet_active = wb[sheet]
-            print(f"Извлечение данных из листа: {sheet}.")
-            print(f"Всего найдено позиций: {sheet_active.max_column - 1}.")
+            buyer_address_field = driver.find_element(By.ID, 'ulica_nabywca')
+            buyer_address_field.send_keys(Keys.CONTROL, "a")
+            buyer_address_field.send_keys(Keys.DELETE)
+            buyer_address_field.send_keys(buyer_address_sheet)
 
-            for row in range(1, sheet_active.max_column, 1):
+            sleep(0.5)
+
+            buyer_place_field = driver.find_element(By.ID, 'miasto_nabywca')
+            buyer_place_field.send_keys(Keys.CONTROL, "a")
+            buyer_place_field.send_keys(Keys.DELETE)
+            buyer_place_field.send_keys(buyer_place_sheet)
+
+            sleep(0.5)
+
+            # filling field 'Waluta'
+            currency_field = Select(driver.find_element(By.ID, 'waluta'))
+            currency_field.select_by_visible_text(currency_sheet)
+
+            sleep(1)
+
+            # for row in tqdm(range(1, sheet_active.max_column, 1), desc=sheet_name, unit="product", dynamic_ncols=True):
+            i = 0
+            for row in sheet_active.iter_rows(min_row=12, max_col=3, values_only=True):
+                if row[0] is None and row[1] is None and row[2] is None:
+                    break
+                    sleep(100)
 
                 # select data about products
-                product_name_sheet = sheet_active[1][row].value
-                count_sheet = sheet_active[3][row].value
-                price_netto_sheet = sheet_active[4][row].value
+                product_name_sheet = str(row[0])
+                count_sheet = str(row[1])
+                price_sheet = str(row[2])
 
-                sleep(0.5)
-
-                product_name_site = driver.find_element(By.ID, f"nazwa_{row-1}")
+                # filling field about product
+                product_name_site = driver.find_element(By.ID, f"nazwa_{i}")
                 product_name_site.clear()
                 product_name_site.send_keys(product_name_sheet)
 
                 sleep(0.5)
 
-                select_site = Select(driver.find_element(By.ID, f"jm_{row-1}"))
-                select_site.select_by_index(row)
+                # select option of measure
+                select_measure = Select(driver.find_element(By.ID, f"jm_{i}"))
+                select_measure.select_by_visible_text(measure_sheet)
 
                 sleep(0.5)
 
-                count_site = driver.find_element(By.ID, f"ilosc_{row-1}")
+                # select field of count
+                count_site = driver.find_element(By.ID, f"ilosc_{i}")
                 count_site.send_keys(Keys.CONTROL, "a")
                 count_site.send_keys(Keys.DELETE)
                 count_site.send_keys(count_sheet)
 
                 sleep(0.5)
 
-                price_netto_site = driver.find_element(By.XPATH, f"//input[@id='cena_netto_{row-1}']")
+                # select field of price
+                price_netto_site = driver.find_element(By.XPATH, f"//input[@id='cena_netto_{i}']")
                 price_netto_site.send_keys(Keys.CONTROL, "a")
                 price_netto_site.send_keys(Keys.DELETE)
-                price_netto_site.send_keys(price_netto_sheet)
+                price_netto_site.send_keys(price_sheet)
 
                 sleep(0.5)
 
-                if row < sheet_active.max_column - 1:
-                    add_button_site = driver.find_element(By.XPATH, "//a[@onclick='addRow(arr)']")
-                    add_button_site.click()
+                # fix here
+                tax_field = Select(driver.find_element(By.ID, f'stawka_vat_{i}'))
+                tax_field.select_by_visible_text(tax_sheet)
 
-                    sleep(0.5)
-                else:
-                    pass
+                sleep(0.5)
 
+                add_button_site = driver.find_element(By.XPATH, "//a[@onclick='addRow(arr)']")
+                add_button_site.click()
+
+                sleep(0.5)
+
+                i += 1
+
+            # just click for filling field 'Wartość netto'
             try:
                 just_click = driver.find_element(By.XPATH, "//input[@name='wartosc_netto[0]']")
                 just_click.click()
@@ -212,7 +246,7 @@ def get_factura():
 
     driver.close()
     driver.quit()
-    return print("Program execution completed successfully")
+    return print("\nProgram execution completed successfully")
 
 
 def main():
