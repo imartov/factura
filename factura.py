@@ -167,58 +167,67 @@ def get_factura():
             sleep(1)
 
             # for row in tqdm(range(1, sheet_active.max_column, 1), desc=sheet_name, unit="product", dynamic_ncols=True):
+
+            new_position = True
             i = 0
             for row in sheet_active.iter_rows(min_row=12, max_col=3, values_only=True):
-                if row[0] is None and row[1] is None and row[2] is None:
+                if row[0]:
+
+                    # select data about products
+                    product_name_sheet = str(row[0])
+                    count_sheet = str(row[1])
+                    price_sheet = str(row[2])
+
+                    # filling field about product
+                    product_name_site = driver.find_element(By.ID, f"nazwa_{i}")
+                    product_name_site.send_keys(Keys.CONTROL, "a")
+                    product_name_site.send_keys(Keys.DELETE)
+                    product_name_site.send_keys(product_name_sheet)
+
+                    sleep(0.5)
+
+                    # select option of measure
+                    select_measure = Select(driver.find_element(By.ID, f"jm_{i}"))
+                    select_measure.select_by_visible_text(measure_sheet)
+
+                    sleep(0.5)
+
+                    # select field of count
+                    count_site = driver.find_element(By.ID, f"ilosc_{i}")
+                    count_site.send_keys(Keys.CONTROL, "a")
+                    count_site.send_keys(Keys.DELETE)
+                    count_site.send_keys(count_sheet)
+
+                    sleep(0.5)
+
+                    # select field of price
+                    price_netto_site = driver.find_element(By.XPATH, f"//input[@id='cena_netto_{i}']")
+                    price_netto_site.send_keys(Keys.CONTROL, "a")
+                    price_netto_site.send_keys(Keys.DELETE)
+                    price_netto_site.send_keys(price_sheet)
+
+                    sleep(0.5)
+
+                    # filling field 'Stawka VAT'
+                    tax_field = Select(driver.find_element(By.ID, f'stawka_vat_{i}'))
+                    if document_type_sheet == 'Eksport towarów (poza UE)':
+                        tax_value = '0'
+                        tax_field.select_by_value(tax_value)
+                    else:
+                        tax_field.select_by_value(tax_sheet)
+
+                    sleep(0.5)
+
+                    add_product_button = driver.find_element(By.XPATH, "//a[@onclick='addRow(arr)']")
+                    add_product_button.click()
+
+                    sleep(0.5)
+                    i += 1
+                else:
+                    delete_product_button = driver.find_element(By.XPATH, f"//a[@onclick='deleteRow({i},0,arr);']")
+                    delete_product_button.click()
                     break
-                    sleep(100)
 
-                # select data about products
-                product_name_sheet = str(row[0])
-                count_sheet = str(row[1])
-                price_sheet = str(row[2])
-
-                # filling field about product
-                product_name_site = driver.find_element(By.ID, f"nazwa_{i}")
-                product_name_site.clear()
-                product_name_site.send_keys(product_name_sheet)
-
-                sleep(0.5)
-
-                # select option of measure
-                select_measure = Select(driver.find_element(By.ID, f"jm_{i}"))
-                select_measure.select_by_visible_text(measure_sheet)
-
-                sleep(0.5)
-
-                # select field of count
-                count_site = driver.find_element(By.ID, f"ilosc_{i}")
-                count_site.send_keys(Keys.CONTROL, "a")
-                count_site.send_keys(Keys.DELETE)
-                count_site.send_keys(count_sheet)
-
-                sleep(0.5)
-
-                # select field of price
-                price_netto_site = driver.find_element(By.XPATH, f"//input[@id='cena_netto_{i}']")
-                price_netto_site.send_keys(Keys.CONTROL, "a")
-                price_netto_site.send_keys(Keys.DELETE)
-                price_netto_site.send_keys(price_sheet)
-
-                sleep(0.5)
-
-                # fix here
-                tax_field = Select(driver.find_element(By.ID, f'stawka_vat_{i}'))
-                tax_field.select_by_visible_text(tax_sheet)
-
-                sleep(0.5)
-
-                add_button_site = driver.find_element(By.XPATH, "//a[@onclick='addRow(arr)']")
-                add_button_site.click()
-
-                sleep(0.5)
-
-                i += 1
 
             # just click for filling field 'Wartość netto'
             try:
@@ -233,7 +242,7 @@ def get_factura():
                 try:
                     create_factura = driver.find_element(By.XPATH, "//button[@id='pokaz_i_zapisz']")
                     driver.execute_script("arguments[0].click();", create_factura)
-                    sleep(1)
+                    sleep(10)
                 except Exception:
                     err = True
 
