@@ -6,9 +6,12 @@ from selenium.webdriver.support.ui import Select
 import os
 from openpyxl import load_workbook
 from fake_useragent import UserAgent
+from fake_useragent import UserAgent
 import keys
 from login_facturowo import input_login, get_saved_login_data, get_temp_login_data
 from tqdm import tqdm, trange
+from googletrans import Translator
+from checking import *
 
 
 def get_factura():
@@ -174,7 +177,10 @@ def get_factura():
                 if row[0]:
 
                     # select data about products
-                    product_name_sheet = str(row[0])
+                    product_name_sheet_ru = str(row[0])
+                    translator = Translator()
+                    product_name_sheet_pl = translator.translate(text=product_name_sheet_ru, src='ru', dest='pl')
+
                     count_sheet = str(row[1])
                     price_sheet = str(row[2])
 
@@ -182,7 +188,7 @@ def get_factura():
                     product_name_site = driver.find_element(By.ID, f"nazwa_{i}")
                     product_name_site.send_keys(Keys.CONTROL, "a")
                     product_name_site.send_keys(Keys.DELETE)
-                    product_name_site.send_keys(product_name_sheet)
+                    product_name_site.send_keys(product_name_sheet_pl.text.capitalize())
 
                     sleep(0.5)
 
@@ -236,11 +242,16 @@ def get_factura():
             except Exception as ex:
                 print(ex)
 
+            if waiting_for_checking() == 'stop':
+                driver.close()
+                driver.quit()
+                return print('Принудительное завершение программы.')
+
             # clicking on button for create document while it will be True
             err = False
             while not err:
                 try:
-                    create_factura = driver.find_element(By.XPATH, "//button[@id='pokaz_i_zapisz']")
+                    create_factura = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
                     driver.execute_script("arguments[0].click();", create_factura)
                     sleep(10)
                 except Exception:
