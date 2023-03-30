@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import Select
 import os
 from openpyxl import load_workbook
 from fake_useragent import UserAgent
-from fake_useragent import UserAgent
 import keys
 from login_facturowo import input_login, get_saved_login_data, get_temp_login_data
 from tqdm import tqdm, trange

@@ -5,38 +5,44 @@ from openpyxl import load_workbook
 def checking_files():
     path = f"{os.getcwd()}\\xlsx"
     files_list = os.listdir(path)
-    print(f"\nВсего найдено файлов: {len(files_list)}")
+    # print(f"\nВсего найдено файлов: {len(files_list)}")
 
-    file = open(f'{os.getcwd()}\\none_cells.txt', 'w', encoding='utf-8')
-    file.close()
-
-    rows_list = []
+    none_rows = ''
     for file_name in files_list:
-        print(f"\nИзвлечен файл {file_name}")
+        if file_name[0] == '~':
+            print(f'Пропущен временный файл {file_name}')
+            continue
+        else:
+            print(f"Извлечен файл {file_name}")
 
-        # getting sheets in every excel file
-        wb = load_workbook(filename=f"{path}\\{file_name}")
-        print(f"Всего найдено листов: {len(wb.sheetnames)}")
+            # getting sheets in every excel file
+            wb = load_workbook(filename=f"{path}\\{file_name}")
+            print(f"Всего найдено листов: {len(wb.sheetnames)}")
 
-        for sheet_name in wb.sheetnames:
-            sheet_active = wb[sheet_name]
-            print(f'Проверка листа {sheet_name}\n')
+            for sheet_name in wb.sheetnames:
+                sheet_active = wb[sheet_name]
+                print(f'Проверка листа {sheet_name}\n')
 
-            i = 0
-            for row in sheet_active.iter_rows(min_row=12, max_col=3):
-                products_name_sheet = row[0]
-                count_sheet = row[1]
-                price_sheet = row[2]
+                i = 0
+                for row in sheet_active.iter_rows(min_row=12, max_col=3):
+                    products_name_sheet = row[0]
+                    count_sheet = row[1]
+                    price_sheet = row[2]
 
-                if products_name_sheet.value is None and count_sheet.value is None and price_sheet.value is None:
-                    break
-                else:
-                    rows_list.append(row)
-                    with open(f'{os.getcwd()}\\none_cells.txt', 'a', encoding='utf-8') as file:
-                        file.write(f'Файл: {file_name}, строка: {str(row)}\n')
-                i += 1
+                    if not products_name_sheet.value and not count_sheet.value and not price_sheet.value:
+                        break
+                    elif products_name_sheet.value and count_sheet.value and price_sheet.value:
+                        pass
+                    else:
+                        print(f'Недопустимые значения строки {row}')
+                        none_rows += f'Файл: {file_name}, лист: {sheet_name}, строка: ' + str(row).replace('(', '').replace(')', ';\n')
+                    i += 1
 
-    if rows_list:
+    if none_rows:
+        with open(f'{os.getcwd()}\\none_cells.txt', 'w', encoding='utf-8') as file:
+            file.write(none_rows)
+        print(f'Найдены пустые значения в следующих строках:\n{none_rows}')
+        print('\nЗаполните поля и введите "next" для повторной проверки')
         if input_cell() == 'next':
             checking_files()
     else:
@@ -45,11 +51,11 @@ def checking_files():
 
 
 def input_cell():
-    menu = ['stop', 'help', 'next']
+    menu = ['next']
     input_data = input('Место для ввода: ')
     if input_data not in menu:
-        print(f'\nВведены некорректные данные\nВозможные варианты для ввода:')
-        print(*menu)
+        print(f'\nВведены недопустимые данные\nВозможные варианты для ввода:')
+        print(', '.join(menu))
         input_cell()
     return input_data
 
