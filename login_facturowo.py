@@ -3,7 +3,7 @@ import os
 
 
 def input_yes_no():
-    input_saved_login = input("To save your data for login? Please enter 'yes' or 'no': ")
+    input_saved_login = input("Сохранить логин и пароль? Введите 'yes' or 'no': ")
     if input_saved_login != "yes" and input_saved_login != "no":
         print("You need to enter only 'yes' or 'no'")
         input_yes_no()
@@ -11,8 +11,8 @@ def input_yes_no():
 
 
 def input_login():
-    input_email = input("Enter email for Fakturowo: ")
-    input_password = input("Enter password for Fakturowo: ")
+    input_email = input("\nВведите логин от https://www.fakturowo.pl: ")
+    input_password = input("Введите пароль от https://www.fakturowo.pl: ")
     saved_login = input_yes_no()
     if saved_login == "yes":
         saved_data = {

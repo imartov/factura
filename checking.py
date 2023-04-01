@@ -8,46 +8,58 @@ def checking_files():
     # print(f"\nВсего найдено файлов: {len(files_list)}")
 
     none_rows = ''
+    validation_files = []
+    validation_sheets = []
     for file_name in files_list:
-        if file_name[0] == '~':
-            print(f'Пропущен временный файл {file_name}')
-            continue
-        else:
-            print(f"Извлечен файл {file_name}")
-
-            # getting sheets in every excel file
+        try:
+            validation_files.append(file_name)
             wb = load_workbook(filename=f"{path}\\{file_name}")
-            print(f"Всего найдено листов: {len(wb.sheetnames)}")
+            print(f'\nПроверка файла: {file_name}')
+            print(f"Всего найдено листов: {len(wb.sheetnames) - 1}")
 
             for sheet_name in wb.sheetnames:
-                sheet_active = wb[sheet_name]
-                print(f'Проверка листа {sheet_name}\n')
+                if sheet_name == 'values_for_lists':
+                    continue
+                else:
+                    validation_sheets.append(sheet_name)
+                    sheet_active = wb[sheet_name]
+                    print(f'Проверка листа: {sheet_name}')
 
-                i = 0
-                for row in sheet_active.iter_rows(min_row=12, max_col=3):
-                    products_name_sheet = row[0]
-                    count_sheet = row[1]
-                    price_sheet = row[2]
+                    i = 0
+                    for row in sheet_active.iter_rows(min_row=12, max_col=3):
+                        products_name_sheet = row[0]
+                        count_sheet = row[1]
+                        price_sheet = row[2]
 
-                    if not products_name_sheet.value and not count_sheet.value and not price_sheet.value:
-                        break
-                    elif products_name_sheet.value and count_sheet.value and price_sheet.value:
-                        pass
-                    else:
-                        print(f'Недопустимые значения строки {row}')
-                        none_rows += f'Файл: {file_name}, лист: {sheet_name}, строка: ' + str(row).replace('(', '').replace(')', ';\n')
-                    i += 1
+                        if not products_name_sheet.value and not count_sheet.value and not price_sheet.value:
+                            break
+                        elif products_name_sheet.value and count_sheet.value and price_sheet.value:
+                            pass
+                        else:
+                            row = str(row).replace('(', '').replace(')', '\n')
+                            print(f'Файл: {file_name}, Лист: {sheet_name}, недопустимые значения строки {row}')
+                            none_rows += f'Файл: {file_name}, Лист: {sheet_name}, строка: {row}'
+
+                        i += 1
+
+        except Exception as ex:
+            print(f'Исключение: {ex}\n')
+            continue
 
     if none_rows:
         with open(f'{os.getcwd()}\\none_cells.txt', 'w', encoding='utf-8') as file:
             file.write(none_rows)
         print(f'Найдены пустые значения в следующих строках:\n{none_rows}')
-        print('\nЗаполните поля и введите "next" для повторной проверки')
+        print('Заполните поля и введите "next" для повторной проверки')
         if input_cell() == 'next':
-            checking_files()
+            try:
+                os.remove(f"{os.getcwd()}\\none_cells.txt")
+            except Exception:
+                pass
+        checking_files()
     else:
-        print('Проверка документа пройдена успешна, пустые поля отсутствуют.')
-        return
+        print('Проверка документа пройдена успешно, пустые поля отсутствуют.')
+        return validation_files
 
 
 def input_cell():
@@ -61,18 +73,19 @@ def input_cell():
 
 
 def waiting_for_checking():
-    print('Выполнение программы приостановлено.\nДля возобновления введите "next"\nДля остановки введите "stop"')
-    input_data = input()
-    if input_data != 'next' and input_data != 'stop':
-        print('Проверьте корректность введенных данных и повторите ввод')
+    menu = ['stop', 'next']
+    print('\nВыполнение программы приостановлено\nПроверьте введенные данные\nДля возобновление введите "next"\nДля остановки введите "stop"')
+    input_data = input('Место для ввода: ')
+    if input_data not in menu:
+        print('Введено недопустимое значение')
         waiting_for_checking()
     return input_data
 
 
 def main():
     checking_files()
-    # input_cell()
-    # waiting_for_checking()
+    input_cell()
+    waiting_for_checking()
 
 
 if __name__ == "__main__":
