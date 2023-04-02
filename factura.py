@@ -1,4 +1,6 @@
+import selenium
 from selenium import webdriver
+from selenium.common import ElementClickInterceptedException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from time import sleep
@@ -126,11 +128,10 @@ def get_factura():
             if sheet_name == 'values_for_lists':
                 continue
             else:
-                print(f'Извлечение данных из листа: {sheet_name}')
+                print(f'\nИзвлечение данных из листа: {sheet_name}')
 
                 # select active sheet
                 sheet_active = wb[sheet_name]
-
                 # select data from sheet from excel file
                 document_type_sheet = str(sheet_active['B1'].value)
                 buyer_name_sheet = str(sheet_active['B2'].value)
@@ -264,21 +265,33 @@ def get_factura():
                     driver.quit()
                     return print('Принудительное завершение программы')
 
-                try:
-                    driver.find_element(By.XPATH, "//div[@class='alert alert-danger']")
-                    prev_sheet_count_products = i
-                    print('\nНекоторые поля на странице не заполнены либо пусты')
-                    if waiting_for_checking() == 'stop':
-                        driver.close()
-                        driver.quit()
-                        return print('Принудительное завершение программы')
-                except:
-                    prev_sheet_count_products = 0
-                    pass
+                def save_document():
+                    save_factura_button = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
+                    try:
+                        driver.execute_script("arguments[0].click();", save_factura_button)
+                    except Exception:
+                        pass
 
-                save_factura_button = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
-                driver.execute_script("arguments[0].click();", save_factura_button)
-                sleep(0.5)
+                    sleep(0.5)
+
+                save_document()
+
+                err = False
+                while not err:
+                    try:
+                        driver.find_element(By.XPATH, "//div[@class='alert alert-danger']")
+                        prev_sheet_count_products = i
+                        print('\nНекоторые поля на странице не заполнены либо пусты')
+                        if waiting_for_checking() == 'stop':
+                            driver.close()
+                            driver.quit()
+                            return print('Принудительное завершение программы')
+
+                        save_document()
+                    except:
+                        prev_sheet_count_products = 0
+                        err = True
+                        pass
 
                 refresh_page = driver.find_element(By.XPATH, "//a[@class='link-gray']")
                 refresh_page.click()

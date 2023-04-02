@@ -77,7 +77,7 @@ def waiting_for_checking():
     print('\nВыполнение программы приостановлено\nПроверьте введенные данные\nДля возобновление введите "next"\nДля остановки введите "stop"')
     input_data = input('Место для ввода: ')
     if input_data not in menu:
-        print('Введено недопустимое значение')
+        print('\nВведено недопустимое значение')
         waiting_for_checking()
     return input_data
 
