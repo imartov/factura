@@ -265,33 +265,38 @@ def get_factura():
                     driver.quit()
                     return print('Принудительное завершение программы')
 
-                def save_document():
-                    save_factura_button = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
-                    try:
-                        driver.execute_script("arguments[0].click();", save_factura_button)
-                    except Exception:
-                        pass
+                save_factura_button = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
+                driver.execute_script("arguments[0].click();", save_factura_button)
 
-                    sleep(0.5)
+                # if error message is displayed
+                error_message = driver.find_element(By.XPATH, '/html/body/div[1]/main/section[2]/div/div/div[1]/div')
+                if error_message.is_displayed():
+                    print('\nНекоторые поля на странице не корректны либо пусты')
 
-                save_document()
-
-                err = False
-                while not err:
-                    try:
-                        driver.find_element(By.XPATH, "//div[@class='alert alert-danger']")
-                        prev_sheet_count_products = i
-                        print('\nНекоторые поля на странице не заполнены либо пусты')
+                    def save_document():
                         if waiting_for_checking() == 'stop':
                             driver.close()
                             driver.quit()
                             return print('Принудительное завершение программы')
 
-                        save_document()
-                    except:
-                        prev_sheet_count_products = 0
-                        err = True
-                        pass
+                        refresh_currency_page = Select(driver.find_element(By.XPATH, '//*[@id="waluta"]'))
+                        refresh_currency_page.select_by_visible_text('PLN')
+                        sleep(1)
+                        refresh_currency_page = Select(driver.find_element(By.XPATH, '//*[@id="waluta"]'))
+                        refresh_currency_page.select_by_visible_text(currency_sheet)
+
+                        save_factura_button = driver.find_element(By.XPATH, "//button[@id='pobierz_i_zapisz']")
+                        driver.execute_script("arguments[0].click();", save_factura_button)
+
+                        sleep(0.5)
+
+                        error_message = driver.find_element(By.XPATH,
+                                                            '/html/body/div[1]/main/section[2]/div/div/div[1]/div')
+                        if error_message.is_displayed():
+                            print('\nНекоторые поля на странице не заполнены либо пусты')
+                            save_document()
+
+                    save_document()
 
                 refresh_page = driver.find_element(By.XPATH, "//a[@class='link-gray']")
                 refresh_page.click()
