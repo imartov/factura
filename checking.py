@@ -1,5 +1,6 @@
 import os
 from openpyxl import load_workbook
+import string
 
 
 def checking_files():
@@ -9,38 +10,45 @@ def checking_files():
 
     none_rows = ''
     validation_files = []
+    not_validation_files = []
     validation_sheets = []
+
+    all_ascii = string.ascii_lowercase + string.ascii_uppercase + 'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮЁйцукенгшщзхъфывапролджэячсмитьбюё'
     for file_name in files_list:
         try:
-            validation_files.append(file_name)
-            wb = load_workbook(filename=f"{path}\\{file_name}")
-            print(f'\nПроверка файла: {file_name}')
-            print(f"Всего найдено листов: {len(wb.sheetnames) - 1}")
+            if file_name[0] not in all_ascii:
+                not_validation_files.append(file_name)
+                continue
+            else:
+                validation_files.append(file_name)
+                wb = load_workbook(filename=f"{path}\\{file_name}")
+                print(f'\nПроверка файла: {file_name}')
+                print(f"Всего найдено листов: {len(wb.sheetnames) - 1}")
 
-            for sheet_name in wb.sheetnames:
-                if sheet_name == 'values_for_lists':
-                    continue
-                else:
-                    validation_sheets.append(sheet_name)
-                    sheet_active = wb[sheet_name]
-                    print(f'Проверка листа: {sheet_name}')
+                for sheet_name in wb.sheetnames:
+                    if sheet_name == 'values_for_lists':
+                        continue
+                    else:
+                        validation_sheets.append(sheet_name)
+                        sheet_active = wb[sheet_name]
+                        print(f'Проверка листа: {sheet_name}')
 
-                    i = 0
-                    for row in sheet_active.iter_rows(min_row=12, max_col=3):
-                        products_name_sheet = row[0]
-                        count_sheet = row[1]
-                        price_sheet = row[2]
+                        i = 0
+                        for row in sheet_active.iter_rows(min_row=12, max_col=3):
+                            products_name_sheet = row[0]
+                            count_sheet = row[1]
+                            price_sheet = row[2]
 
-                        if not products_name_sheet.value and not count_sheet.value and not price_sheet.value:
-                            break
-                        elif products_name_sheet.value and count_sheet.value and price_sheet.value:
-                            pass
-                        else:
-                            row = str(row).replace('(', '').replace(')', '\n')
-                            print(f'Файл: {file_name}, Лист: {sheet_name}, недопустимые значения строки {row}')
-                            none_rows += f'Файл: {file_name}, Лист: {sheet_name}, строка: {row}'
+                            if not products_name_sheet.value and not count_sheet.value and not price_sheet.value:
+                                break
+                            elif products_name_sheet.value and count_sheet.value and price_sheet.value:
+                                pass
+                            else:
+                                row = str(row).replace('(', '').replace(')', '\n')
+                                print(f'Файл: {file_name}, Лист: {sheet_name}, недопустимые значения строки {row}')
+                                none_rows += f'Файл: {file_name}, Лист: {sheet_name}, строка: {row}'
 
-                        i += 1
+                            i += 1
 
         except Exception as ex:
             print(f'Исключение: {ex}\n')
@@ -59,6 +67,8 @@ def checking_files():
         checking_files()
     else:
         print('\nПроверка документа пройдена успешно, пустые поля отсутствуют.')
+        print('Системные / некорректные файлы: ' + ', '.join(not_validation_files))
+        print('Корректные файлы: ' + ', '.join(validation_files))
         return validation_files
 
 
