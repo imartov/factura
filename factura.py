@@ -137,10 +137,11 @@ def get_factura():
                 buyer_name_sheet = str(sheet_active['B2'].value)
                 buyer_nip_sheet = str(sheet_active['B3'].value)
                 buyer_address_sheet = str(sheet_active['B4'].value)
-                buyer_place_sheet = str(sheet_active['B5'].value)
-                tax_sheet = str(sheet_active['B6'].value)
-                currency_sheet = str(sheet_active['B7'].value)
-                measure_sheet = str(sheet_active['B8'].value)
+                buyer_city_sheet = str(sheet_active['B5'].value)
+                buyer_code_sheet = str(sheet_active['B6'].value)
+                tax_sheet = str(sheet_active['B7'].value)
+                currency_sheet = str(sheet_active['B8'].value)
+                measure_sheet = str(sheet_active['B9'].value)
 
                 # filling field 'Dokument'
                 document_type_select = Select(driver.find_element(By.ID, 'rodzaj'))
@@ -168,10 +169,17 @@ def get_factura():
 
                 sleep(0.5)
 
-                buyer_place_field = driver.find_element(By.ID, 'miasto_nabywca')
-                buyer_place_field.send_keys(Keys.CONTROL, "a")
-                buyer_place_field.send_keys(Keys.DELETE)
-                buyer_place_field.send_keys(buyer_place_sheet)
+                buyer_city_field = driver.find_element(By.ID, 'miasto_nabywca')
+                buyer_city_field.send_keys(Keys.CONTROL, "a")
+                buyer_city_field.send_keys(Keys.DELETE)
+                buyer_city_field.send_keys(buyer_city_sheet)
+
+                sleep(0.5)
+
+                buyer_code_page = driver.find_element(By.XPATH, '//*[@id="kod_nabywca"]')
+                buyer_code_page.send_keys(Keys.CONTROL, "a")
+                buyer_code_page.send_keys(Keys.DELETE)
+                buyer_code_page.send_keys(buyer_code_sheet)
 
                 sleep(0.5)
 
@@ -183,8 +191,7 @@ def get_factura():
 
                 # for row in tqdm(range(1, sheet_active.max_column, 1), desc=sheet_name, unit="product", dynamic_ncols=True):
                 i = 0
-                for row in sheet_active.iter_rows(min_row=12, max_col=3, values_only=True):
-
+                for row in sheet_active.iter_rows(min_row=13, max_col=3, values_only=True):
                     if row[0]:
 
                         # select data about products
