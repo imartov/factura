@@ -12,8 +12,13 @@ from login_facturowo import input_login, get_saved_login_data, get_temp_login_da
 from tqdm import tqdm, trange
 from googletrans import Translator
 from checking import *
+from loguru import logger
 
 
+logger.add('debug.log', format='{time} {level} {message}', level='DEBUG', rotation='10 KB', compression='zip')
+
+
+@logger.catch()
 def get_factura():
     validation_files = checking_files()
     if "saved_login.json" in os.listdir(os.getcwd()):
@@ -97,7 +102,8 @@ def get_factura():
         pass
 
     # add button for creating new document
-    new_document_button = driver.find_element(By.XPATH, f"//a[@class='btn btn-xs btn-primary']")
+    # new_document_button = driver.find_element(By.XPATH, f"//a[@class='btn btn-xs btn-primary']")
+    new_document_button = driver.find_element(By.XPATH, f"//a[@class='btn btn-xs btn-primarydcd']")
     new_document_button.click()
 
     sleep(1.5)
@@ -195,18 +201,19 @@ def get_factura():
                     if row[0]:
 
                         # select data about products
-                        product_name_sheet_ru = str(row[0])
+                        product_name_sheet = str(row[0])
                         count_sheet = str(row[1])
                         price_sheet = str(row[2])
 
                         translator = Translator()
-                        product_name_sheet_pl = translator.translate(text=product_name_sheet_ru, src='ru', dest='pl')
+                        product_name_sheet_trans = translator.translate(text=product_name_sheet, dest='pl')
+
 
                         # filling field about product
                         product_name_site = driver.find_element(By.ID, f"nazwa_{i}")
                         product_name_site.send_keys(Keys.CONTROL, "a")
                         product_name_site.send_keys(Keys.DELETE)
-                        product_name_site.send_keys(product_name_sheet_pl.text.capitalize())
+                        product_name_site.send_keys(product_name_sheet_trans.text.capitalize())
 
                         sleep(0.5)
 
@@ -313,6 +320,7 @@ def get_factura():
     driver.close()
     driver.quit()
     return print("\nProgram execution completed successfully")
+
 
 
 def main():
